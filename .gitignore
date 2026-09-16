@@ -1,0 +1,110 @@
+# ---------------------------------------------------------------------------
+# IQ capture data -- THE IMPORTANT ONE
+# A single 20 s capture at 61.44 MSPS is 4.9 GB. GitHub rejects files over
+# 100 MB and warns above 50 MB, and a repo that ever contained one stays
+# bloated forever because git keeps history. Never commit raw samples.
+# ---------------------------------------------------------------------------
+*.iq
+*.raw
+*.dat
+*.bin
+*.cf32
+*.cs16
+*.sc16
+*.fc32
+*.npy
+*.npz
+*.h5
+*.hdf5
+
+# Capture output directories
+captures/
+data/
+recordings/
+runs/
+
+# Metadata sidecars written next to captures. Keep curated examples by
+# force-adding them:  git add -f examples/sample.json
+*.iq.json
+capture_*.json
+demo*.json
+test*.json
+
+# ---------------------------------------------------------------------------
+# Credentials and site-specific config -- never publish
+# ---------------------------------------------------------------------------
+*.nmconnection
+*secret*
+*credential*
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.p12
+# site-specific network setup (contains usernames / institution details)
+*eduroam*
+site-local/
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ---------------------------------------------------------------------------
+# GNU Radio
+# GRC generates a .py next to every .grc flowgraph; the .grc is the source.
+# ---------------------------------------------------------------------------
+*.grc_gnuradio/
+grc_generated/
+top_block.py
+default.py
+
+# ---------------------------------------------------------------------------
+# Logs and scratch
+# ---------------------------------------------------------------------------
+*.log
+logs/
+tmp/
+scratch/
+core
+*.core
+
+# ---------------------------------------------------------------------------
+# Editors and OS
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+desktop.ini
