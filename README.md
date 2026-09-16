@@ -154,7 +154,21 @@ flowgraphs. Note that GNU Radio 3.10 has no dedicated PlutoSDR block — use
 
 A 20-second capture at 61.44 MSPS is 4.9 GB. The `.gitignore` excludes raw
 sample formats and capture directories. Git keeps history forever, so a repo
-that once contained a large file stays bloated after deletion.
+that once contained a large file stays bloated after deletion, and removing it
+means rewriting history for everyone who cloned.
+
+`.gitignore` alone will not save you from `git add -f` or a file type it does
+not anticipate, so there is a pre-commit hook as a second line of defence. It
+is versioned in `.githooks/` rather than `.git/hooks/` so it survives cloning.
+Enable it once per clone:
+
+```sh
+git config core.hooksPath .githooks
+```
+
+It rejects anything over 50 MB and any raw sample format regardless of size.
+Override deliberately with `git commit --no-verify`, or raise the limit with
+`MAX_MB=200 git commit`.
 
 ## License
 

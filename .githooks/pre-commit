@@ -1,0 +1,81 @@
+#!/bin/bash
+# Reject oversized files and raw IQ data before they enter history.
+#
+# Git keeps history forever: a large file committed once bloats the repo even
+# after deletion, and removing it means rewriting history for everyone.
+# GitHub warns above 50 MB and hard-rejects above 100 MB.
+#
+# Enable (once per clone):   git config core.hooksPath .githooks
+# Deliberate override:       git commit --no-verify
+# Raise the limit:           MAX_MB=200 git commit
+set -uo pipefail
+
+MAX_MB="${MAX_MB:-50}"
+MAX_BYTES=$((MAX_MB * 1024 * 1024))
+
+# Raw sample formats. These are never source, and are the ones that get big.
+IQ_RE='\.(iq|raw|dat|bin|cf32|cs16|sc16|fc32|npy|npz|h5|hdf5)$'
+
+fail=0
+big_list=""
+iq_list=""
+
+while IFS= read -r f; do
+    [ -z "$f" ] && continue
+
+    # size of the STAGED blob, not the working-tree file - they can differ
+    blob=$(git ls-files -s -- "$f" 2>/dev/null | awk '{print $2}')
+    if [ -n "$blob" ]; then
+        size=$(git cat-file -s "$blob" 2>/dev/null || echo 0)
+    else
+        size=$(wc -c < "$f" 2>/dev/null || echo 0)
+    fi
+
+    if [ "$size" -gt "$MAX_BYTES" ]; then
+        big_list="${big_list}    $(printf '%8.1f MB  %s\n' "$(echo "$size" | awk '{print $1/1048576}')" "$f")"
+        fail=1
+    fi
+
+    if echo "$f" | grep -qiE "$IQ_RE"; then
+        iq_list="${iq_list}    $f
+"
+        fail=1
+    fi
+done < <(git diff --cached --name-only --diff-filter=ACM)
+
+if [ "$fail" -eq 0 ]; then
+    exit 0
+fi
+
+echo
+echo "  ============================================================"
+echo "  COMMIT BLOCKED"
+echo "  ============================================================"
+
+if [ -n "$big_list" ]; then
+    echo
+    echo "  Files larger than ${MAX_MB} MB:"
+    printf '%s' "$big_list"
+    echo
+    echo "  GitHub rejects files over 100 MB. More importantly, git keeps"
+    echo "  history forever - deleting the file later does NOT shrink the repo."
+fi
+
+if [ -n "$iq_list" ]; then
+    echo
+    echo "  Raw IQ sample data (never belongs in git):"
+    printf '%s' "$iq_list"
+    echo "  A 20 s capture at 61.44 MSPS is 4.9 GB."
+fi
+
+echo
+echo "  What to do:"
+echo "    git restore --staged <file>     unstage it"
+echo "    (data belongs outside the repo, or in a release asset)"
+echo
+echo "  If this is genuinely intended:"
+echo "    git commit --no-verify          skip this check"
+echo "    MAX_MB=200 git commit           raise the size limit"
+echo "  ============================================================"
+echo
+exit 1
